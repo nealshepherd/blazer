@@ -1,6 +1,6 @@
 module Blazer
   class QueriesController < BaseController
-    before_action :set_query, only: [:show, :edit, :update, :destroy, :refresh]
+    before_action :set_query, only: [:show, :edit, :update, :destroy, :refresh, :embed]
 
     def home
       if params[:filter] == "dashboards"
@@ -184,6 +184,22 @@ module Blazer
     def cancel
       Blazer.data_sources[params[:data_source]].cancel(blazer_run_id)
       render json: {}
+    end
+
+    def embed
+      @statement = @query.statement.dup
+      process_vars(@statement, @query.data_source)
+
+      @smart_vars = {}
+      @sql_errors = []
+      data_source = Blazer.data_sources[@query.data_source]
+      @bind_vars.each do |var|
+        smart_var, error = parse_smart_variables(var, data_source)
+        @smart_vars[var] = smart_var if smart_var
+        @sql_errors << error if error
+      end
+
+      Blazer.transform_statement.call(data_source, @statement) if Blazer.transform_statement
     end
 
     private

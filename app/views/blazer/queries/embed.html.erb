@@ -1,0 +1,15 @@
+<div class="chart-container" style="padding-top: 0px; margin-top: -20px;">
+  <h4><%= link_to @query.friendly_name, query_path(@query, variable_params), target: "_blank" %></h4>
+  <div id="chart-<%= @query.id %>" class="chart">
+    <p class="text-muted">Loading...</p>
+  </div>
+</div>
+<script>
+  <%= blazer_js_var "data", {statement: @query.statement, query_id: @query.id, only_chart: true} %>
+  runQuery(data, function (data) {
+    $("#chart-<%= @query.id %>").html(data)
+    $("#chart-<%= @query.id %> table").stupidtable()
+  }, function (message) {
+    $("#chart-<%= @query.id %>").addClass("query-error").html(message)
+  });
+</script>
